@@ -9,16 +9,13 @@ import javax.swing.border.LineBorder;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.text.NumberFormat;
-import java.util.Locale;
 
 public class SistemKepegawaianUI {
 
-    // PALET WARNA LOGIN (Kontras Tinggi)
     private static final Color BG_DARKER      = new Color(24, 26, 31);
     private static final Color BG_SIDEBAR     = new Color(33, 37, 43);
-    private static final Color ACCENT_BLUE    = new Color(37, 99, 235);  // Biru Panel Login
-    private static final Color ACCENT_GREEN   = new Color(16, 185, 129); // Hijau Tombol Dashboard
+    private static final Color ACCENT_BLUE    = new Color(37, 99, 235);
+    private static final Color ACCENT_GREEN   = new Color(16, 185, 129);
     private static final Color TEXT_MAIN      = new Color(240, 240, 245);
     private static final Color TEXT_DIM       = new Color(150, 155, 170);
     private static final Color BORDER_COLOR   = new Color(50, 55, 65);
@@ -27,13 +24,13 @@ public class SistemKepegawaianUI {
 
     public static void main(String[] args) {
         PegawaiService service = new PegawaiService();
-        JFrame frame = new JFrame("HR Management System v3.0");
+        JFrame frame = new JFrame("HR Management System v4.0");
         frame.setSize(1200, 800);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.getContentPane().setBackground(BG_DARKER);
         frame.setLayout(new BorderLayout());
 
-        // ================= SIDEBAR (FORM INPUT) =================
+        // --- SIDEBAR ---
         JPanel sidebar = new JPanel();
         sidebar.setPreferredSize(new Dimension(380, 0));
         sidebar.setBackground(BG_SIDEBAR);
@@ -46,7 +43,7 @@ public class SistemKepegawaianUI {
         sidebar.add(sideTitle);
         sidebar.add(Box.createRigidArea(new Dimension(0, 35)));
 
-        String[] labels = {"ID Pegawai", "Nama Lengkap", "Jabatan", "Gaji Pokok (Angka)"};
+        String[] labels = {"ID Pegawai (Angka)", "Nama Lengkap", "Jabatan", "Gaji Pokok (Angka)"};
         JTextField[] fields = new JTextField[4];
 
         for (int i = 0; i < labels.length; i++) {
@@ -64,8 +61,6 @@ public class SistemKepegawaianUI {
         }
 
         sidebar.add(Box.createVerticalGlue());
-
-        // ACTION BUTTONS
         JButton btnAdd = createActionBtn("SIMPAN DATA BARU", ACCENT_GREEN);
         JButton btnUpd = createActionBtn("PERBARUI DATA", ACCENT_BLUE);
         JButton btnDel = createActionBtn("HAPUS PERMANEN", new Color(220, 38, 38));
@@ -74,7 +69,7 @@ public class SistemKepegawaianUI {
         sidebar.add(btnUpd); sidebar.add(Box.createRigidArea(new Dimension(0, 12)));
         sidebar.add(btnDel);
 
-        // ================= MAIN CONTENT (LIST DATA) =================
+        // --- MAIN CONTENT ---
         JPanel mainContent = new JPanel(new BorderLayout());
         mainContent.setOpaque(false);
 
@@ -85,17 +80,7 @@ public class SistemKepegawaianUI {
         JLabel mainTitle = new JLabel("DAFTAR PEGAWAI AKTIF");
         mainTitle.setFont(new Font("Segoe UI", Font.BOLD, 26));
         mainTitle.setForeground(TEXT_MAIN);
-
-        JLabel subTitle = new JLabel("Kelola informasi gaji dan jabatan karyawan");
-        subTitle.setForeground(TEXT_DIM);
-        subTitle.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-
-        JPanel titlePanel = new JPanel(new GridLayout(2, 1));
-        titlePanel.setOpaque(false);
-        titlePanel.add(mainTitle);
-        titlePanel.add(subTitle);
-
-        header.add(titlePanel, BorderLayout.WEST);
+        header.add(mainTitle, BorderLayout.WEST);
         mainContent.add(header, BorderLayout.NORTH);
 
         JPanel listPanel = new JPanel();
@@ -103,120 +88,147 @@ public class SistemKepegawaianUI {
         listPanel.setOpaque(false);
 
         JScrollPane scrollPane = new JScrollPane(listPanel);
-        scrollPane.setBorder(null);
+        scrollPane.setBorder(new EmptyBorder(0, 50, 40, 50));
         scrollPane.setOpaque(false);
         scrollPane.getViewport().setOpaque(false);
-        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
-        scrollPane.setBorder(new EmptyBorder(0, 50, 40, 50));
         mainContent.add(scrollPane, BorderLayout.CENTER);
 
-        // REFRESH LOGIC
         Runnable refresh = () -> {
             listPanel.removeAll();
-            if (service.getAll().isEmpty()) {
-                JLabel emptyMsg = new JLabel("Tidak ada data. Silakan tambahkan pegawai baru.");
-                emptyMsg.setForeground(TEXT_DIM);
-                emptyMsg.setAlignmentX(Component.CENTER_ALIGNMENT);
-                listPanel.add(Box.createVerticalStrut(100));
-                listPanel.add(emptyMsg);
-            } else {
-                int idx = 0;
-                for (Pegawai p : service.getAll()) {
-                    listPanel.add(createModernRow(p, idx++, fields, listPanel));
-                    listPanel.add(Box.createRigidArea(new Dimension(0, 15)));
-                }
+            int idx = 0;
+            for (Pegawai p : service.getAll()) {
+                listPanel.add(createModernRow(p, idx++, fields, listPanel));
+                listPanel.add(Box.createRigidArea(new Dimension(0, 15)));
             }
             listPanel.revalidate();
             listPanel.repaint();
         };
 
-        // EVENT HANDLERS WITH SALARY HANDLING
+        // --- ACTION HANDLERS ---
         btnAdd.addActionListener(e -> {
             if (!validasiInput(frame, fields)) return;
-            try {
-                int gajiValue = Integer.parseInt(fields[3].getText());
-                service.add(new Pegawai(fields[0].getText(), fields[1].getText(),
-                        fields[2].getText(), gajiValue));
-                refresh.run();
-                clear(fields);
-            } catch (NumberFormatException ex) {
-                JOptionPane.showMessageDialog(frame, "Format gaji tidak valid!", "Error", JOptionPane.ERROR_MESSAGE);
+            String idInput = fields[0].getText().trim();
+
+            if (cekIdAda(service, idInput, -1)) {
+                showColorfulPopup(frame, "Gagal! ID '" + idInput + "' sudah terdaftar ❌", "Duplicate ID", false);
+                return;
             }
+
+            service.add(new Pegawai(idInput, fields[1].getText(), fields[2].getText(), Integer.parseInt(fields[3].getText())));
+            refresh.run();
+            showColorfulPopup(frame, "Hooray! Data pegawai berhasil disimpan ✅", "Success", true);
+            clear(fields);
         });
 
         btnUpd.addActionListener(e -> {
             if (selectedIndex == -1) {
-                JOptionPane.showMessageDialog(frame, "Pilih data yang ingin diubah!");
+                showColorfulPopup(frame, "Pilih data di daftar terlebih dahulu! ❌", "Peringatan", false);
                 return;
             }
             if (!validasiInput(frame, fields)) return;
-            service.update(selectedIndex, new Pegawai(fields[0].getText(), fields[1].getText(),
-                    fields[2].getText(), Integer.parseInt(fields[3].getText())));
+
+            String idInput = fields[0].getText().trim();
+            if (cekIdAda(service, idInput, selectedIndex)) {
+                showColorfulPopup(frame, "Gagal! ID sudah digunakan pegawai lain ❌", "Update Error", false);
+                return;
+            }
+
+            service.update(selectedIndex, new Pegawai(idInput, fields[1].getText(), fields[2].getText(), Integer.parseInt(fields[3].getText())));
             refresh.run();
+            showColorfulPopup(frame, "Mantap! Data telah diperbarui ✅", "Update Success", true);
             clear(fields);
         });
 
         btnDel.addActionListener(e -> {
-            if (selectedIndex == -1) return;
-            int confirm = JOptionPane.showConfirmDialog(frame, "Hapus data ini?", "Konfirmasi", JOptionPane.YES_NO_OPTION);
-            if (confirm == JOptionPane.YES_OPTION) {
-                service.delete(selectedIndex);
-                refresh.run();
-                clear(fields);
+            if (selectedIndex != -1) {
+                int res = JOptionPane.showConfirmDialog(frame, "Hapus data ini?", "Konfirmasi", JOptionPane.YES_NO_OPTION);
+                if(res == JOptionPane.YES_OPTION) {
+                    service.delete(selectedIndex);
+                    refresh.run();
+                    showColorfulPopup(frame, "Data pegawai telah dihapus ❌", "Deleted", false);
+                    clear(fields);
+                }
             }
         });
 
         frame.add(sidebar, BorderLayout.WEST);
         frame.add(mainContent, BorderLayout.CENTER);
-
         refresh.run();
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
     }
 
-    // ================= HELPER METHODS & UI STYLING =================
+    // --- CUSTOM POPUP UNIK & BERWARNA ---
+    private static void showColorfulPopup(JFrame parent, String message, String title, boolean isSuccess) {
+        JPanel panel = new JPanel(new BorderLayout(20, 0));
+        Color bgColor = isSuccess ? new Color(25, 45, 35) : new Color(55, 25, 25);
+        Color borderColor = isSuccess ? ACCENT_GREEN : new Color(220, 38, 38);
 
-    private static String formatRupiah(int nominal) {
-        NumberFormat nf = NumberFormat.getInstance(new Locale("id", "ID"));
-        return "Rp " + nf.format(nominal);
+        panel.setBackground(bgColor);
+        panel.setBorder(BorderFactory.createCompoundBorder(
+                new LineBorder(borderColor, 2),
+                new EmptyBorder(20, 25, 20, 25)
+        ));
+
+        JLabel icon = new JLabel(isSuccess ? "✅" : "❌");
+        icon.setFont(new Font("Segoe UI", Font.PLAIN, 35));
+
+        JLabel msg = new JLabel("<html><div style='color:white; font-family:Segoe UI; font-size:13px; font-weight:bold;'>"
+                + message + "</div></html>");
+
+        panel.add(icon, BorderLayout.WEST);
+        panel.add(msg, BorderLayout.CENTER);
+
+        UIManager.put("OptionPane.background", bgColor);
+        UIManager.put("Panel.background", bgColor);
+        JOptionPane.showMessageDialog(parent, panel, title, JOptionPane.PLAIN_MESSAGE);
     }
 
-    private static boolean validasiInput(JFrame frame, JTextField[] f) {
-        for (int i = 0; i < f.length; i++) {
-            if (f[i].getText().trim().isEmpty()) {
-                JOptionPane.showMessageDialog(frame, "Kolom tidak boleh kosong!", "Peringatan", JOptionPane.WARNING_MESSAGE);
-                f[i].requestFocus();
+    private static boolean cekIdAda(PegawaiService s, String id, int indexSekarang) {
+        for (int i = 0; i < s.getAll().size(); i++) {
+            if (i == indexSekarang) continue;
+            if (s.getAll().get(i).getId().equalsIgnoreCase(id)) return true;
+        }
+        return false;
+    }
+
+    private static boolean validasiInput(JFrame f, JTextField[] t) {
+        for (JTextField field : t) {
+            if (field.getText().trim().isEmpty()) {
+                showColorfulPopup(f, "Kolom tidak boleh kosong! ❌", "Input Error", false);
                 return false;
             }
         }
-        // Handling Gaji: Harus angka & positif
+
+        // Exception Handling: ID Harus Angka
         try {
-            int gaji = Integer.parseInt(f[3].getText());
-            if (gaji <= 0) {
-                JOptionPane.showMessageDialog(frame, "Gaji harus lebih besar dari 0!", "Input Gaji", JOptionPane.WARNING_MESSAGE);
-                return false;
-            }
+            Long.parseLong(t[0].getText().trim());
         } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(frame, "Gaji harus berupa angka saja!", "Format Salah", JOptionPane.ERROR_MESSAGE);
+            showColorfulPopup(f, "Waduh! ID Pegawai harus berupa angka ❌", "Format Error", false);
+            t[0].requestFocus();
             return false;
         }
-        return true;
+
+        // Validasi Gaji Harus Angka
+        try {
+            Integer.parseInt(t[3].getText());
+            return true;
+        } catch (NumberFormatException e) {
+            showColorfulPopup(f, "Gaji harus berupa angka saja! ❌", "Format Gaji Error", false);
+            return false;
+        }
     }
 
     private static JPanel createModernRow(Pegawai p, int index, JTextField[] fields, JPanel parent) {
         JPanel row = new JPanel(new GridLayout(1, 4, 20, 0));
         row.setBackground(BG_SIDEBAR);
         row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 90));
-        row.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        row.setBorder(BorderFactory.createCompoundBorder(
-                new LineBorder(BORDER_COLOR, 1),
-                new EmptyBorder(20, 30, 20, 30)
-        ));
+        row.setBorder(BorderFactory.createCompoundBorder(new LineBorder(BORDER_COLOR, 1), new EmptyBorder(20, 30, 20, 30)));
 
         row.add(createCell("ID PEGAWAI", p.getId()));
         row.add(createCell("NAMA LENGKAP", p.getNama()));
-        row.add(createCell("JABATAN", p.getJabatan().toUpperCase()));
-        row.add(createCell("GAJI POKOK", formatRupiah(p.getGaji())));
+        row.add(createCell("JABATAN", p.getJabatan()));
+        row.add(createCell("GAJI POKOK", "Rp " + p.getGaji()));
 
         row.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
@@ -227,29 +239,25 @@ public class SistemKepegawaianUI {
                 fields[3].setText(String.valueOf(p.getGaji()));
 
                 for (Component c : parent.getComponents()) {
-                    if (c instanceof JPanel) {
-                        ((JPanel) c).setBorder(BorderFactory.createCompoundBorder(
-                                new LineBorder(BORDER_COLOR, 1), new EmptyBorder(20, 30, 20, 30)));
-                    }
+                    if (c instanceof JPanel) ((JPanel) c).setBorder(BorderFactory.createCompoundBorder(new LineBorder(BORDER_COLOR, 1), new EmptyBorder(20, 30, 20, 30)));
                 }
-                row.setBorder(BorderFactory.createCompoundBorder(
-                        new LineBorder(ACCENT_BLUE, 2), new EmptyBorder(20, 30, 20, 30)));
+                row.setBorder(BorderFactory.createCompoundBorder(new LineBorder(ACCENT_BLUE, 2), new EmptyBorder(20, 30, 20, 30)));
             }
         });
         return row;
     }
 
-    private static JPanel createCell(String title, String value) {
+    private static JPanel createCell(String t, String v) {
         JPanel cell = new JPanel(new BorderLayout());
         cell.setOpaque(false);
-        JLabel t = new JLabel(title);
-        t.setFont(new Font("Segoe UI", Font.BOLD, 10));
-        t.setForeground(ACCENT_BLUE);
-        JLabel v = new JLabel(value);
-        v.setFont(new Font("Segoe UI", Font.BOLD, 15));
-        v.setForeground(TEXT_MAIN);
-        cell.add(t, BorderLayout.NORTH);
-        cell.add(v, BorderLayout.CENTER);
+        JLabel title = new JLabel(t);
+        title.setFont(new Font("Segoe UI", Font.BOLD, 10));
+        title.setForeground(ACCENT_BLUE);
+        JLabel val = new JLabel(v);
+        val.setFont(new Font("Segoe UI", Font.BOLD, 15));
+        val.setForeground(TEXT_MAIN);
+        cell.add(title, BorderLayout.NORTH);
+        cell.add(val, BorderLayout.CENTER);
         return cell;
     }
 
@@ -257,11 +265,7 @@ public class SistemKepegawaianUI {
         f.setBackground(new Color(40, 44, 52));
         f.setForeground(Color.WHITE);
         f.setCaretColor(ACCENT_BLUE);
-        f.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        f.setBorder(BorderFactory.createCompoundBorder(
-                new LineBorder(BORDER_COLOR, 1),
-                new EmptyBorder(0, 15, 0, 15)
-        ));
+        f.setBorder(BorderFactory.createCompoundBorder(new LineBorder(BORDER_COLOR, 1), new EmptyBorder(0, 15, 0, 15)));
     }
 
     private static JButton createActionBtn(String text, Color bg) {
@@ -271,8 +275,8 @@ public class SistemKepegawaianUI {
         b.setFocusPainted(false);
         b.setFont(new Font("Segoe UI", Font.BOLD, 13));
         b.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
-        b.setCursor(new Cursor(Cursor.HAND_CURSOR));
         b.setBorder(null);
+        b.setCursor(new Cursor(Cursor.HAND_CURSOR));
         return b;
     }
 
