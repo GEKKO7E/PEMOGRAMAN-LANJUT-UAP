@@ -22,7 +22,7 @@ Aplikasi **Sistem Manajemen Data Pegawai** adalah solusi desktop berbasis Java y
 ## 💻 Cara Menjalankan Program
 1.  **Clone Repository**:
     ```bash
-    git clone [LINK_REPOSITORY_ANDA]
+    git clone https://github.com/GEKKO7E/PEMOGRAMAN-LANJUT-UAP/blob/master/README.md
     ```
 2.  **Setup File Data**: Pastikan file `pegawai.csv` berada di root folder proyek agar sistem dapat membaca data secara permanen[cite: 49].
 3.  **Run Application**: Jalankan kelas `LoginUI.java` sebagai entry point utama.
