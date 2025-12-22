@@ -9,7 +9,6 @@ import java.awt.event.MouseEvent;
 
 public class LoginUI {
 
-    // Konstanta Warna Modern
     private static final Color BG_DARK        = new Color(18, 20, 25);
     private static final Color CARD_BG        = new Color(28, 32, 40);
     private static final Color INPUT_BG       = new Color(38, 44, 54);
