@@ -23,6 +23,7 @@ public class SistemKepegawaianUI {
     private static int selectedIndex = -1;
 
     public static void main(String[] args) {
+
         PegawaiService service = new PegawaiService();
         JFrame frame = new JFrame("HR Management - Warm Dark Pro");
         frame.setSize(1000, 780);
@@ -30,7 +31,7 @@ public class SistemKepegawaianUI {
         frame.getContentPane().setBackground(BG_BODY);
         frame.setLayout(new BorderLayout());
 
-        // --- 1. HEADER ---
+        // ================= HEADER =================
         JPanel headerBanner = new JPanel(new GridBagLayout());
         headerBanner.setBackground(HEADER_BG);
         headerBanner.setPreferredSize(new Dimension(0, 80));
@@ -40,7 +41,7 @@ public class SistemKepegawaianUI {
         titleLabel.setForeground(TEXT_MAIN);
         headerBanner.add(titleLabel);
 
-        // --- 2. FORM INPUT ---
+        // ================= FORM INPUT =================
         JPanel formContainer = new JPanel(new GridBagLayout());
         formContainer.setOpaque(false);
         formContainer.setBorder(new EmptyBorder(30, 80, 20, 80));
@@ -50,29 +51,40 @@ public class SistemKepegawaianUI {
 
         String[] labels = {"ID Pegawai", "Nama Lengkap", "Jabatan", "Gaji Pokok"};
         JTextField[] fields = new JTextField[4];
+
         for (int i = 0; i < labels.length; i++) {
-            gbc.gridx = 0; gbc.gridy = i; gbc.weightx = 0.15;
+            gbc.gridx = 0;
+            gbc.gridy = i;
+            gbc.weightx = 0.2;
             JLabel lbl = new JLabel(labels[i]);
             lbl.setForeground(ACCENT_AMBER);
             lbl.setFont(new Font("Segoe UI", Font.BOLD, 13));
             formContainer.add(lbl, gbc);
 
-            gbc.gridx = 1; gbc.weightx = 0.85;
+            gbc.gridx = 1;
+            gbc.weightx = 0.8;
             fields[i] = new JTextField();
             styleInput(fields[i]);
             formContainer.add(fields[i], gbc);
         }
 
+        // ================= BUTTON =================
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
         btnPanel.setOpaque(false);
+
         JButton btnAdd = createDarkBtn("SIMPAN DATA", new Color(67, 87, 71));
         JButton btnUpd = createDarkBtn("PERBARUI", new Color(163, 116, 52));
         JButton btnDel = createDarkBtn("HAPUS", new Color(138, 54, 54));
-        btnPanel.add(btnAdd); btnPanel.add(btnUpd); btnPanel.add(btnDel);
 
+        btnPanel.add(btnAdd);
+        btnPanel.add(btnUpd);
+        btnPanel.add(btnDel);
+
+        // ================= LIST DATA =================
         JPanel listPanel = new JPanel();
         listPanel.setLayout(new BoxLayout(listPanel, BoxLayout.Y_AXIS));
         listPanel.setBackground(BG_BODY);
+
         JScrollPane scrollPane = new JScrollPane(listPanel);
         scrollPane.setBorder(new EmptyBorder(20, 80, 20, 80));
         scrollPane.getViewport().setBackground(BG_BODY);
@@ -86,39 +98,98 @@ public class SistemKepegawaianUI {
                 listPanel.add(createDarkStrip(p, idx++, fields, listPanel));
                 listPanel.add(Box.createRigidArea(new Dimension(0, 12)));
             }
-            listPanel.revalidate(); listPanel.repaint();
+            listPanel.revalidate();
+            listPanel.repaint();
         };
 
+        // ================= ADD =================
         btnAdd.addActionListener(e -> {
+
+            if (!validasiInput(frame, fields)) return;
+
             try {
-                service.add(new Pegawai(fields[0].getText(), fields[1].getText(), fields[2].getText(), Integer.parseInt(fields[3].getText())));
+                Pegawai p = new Pegawai(
+                        fields[0].getText(),
+                        fields[1].getText(),
+                        fields[2].getText(),
+                        Integer.parseInt(fields[3].getText())
+                );
+
+                service.add(p);
                 refresh.run();
                 clearFields(fields);
+
             } catch (Exception ex) {
-                JOptionPane.showMessageDialog(frame, "Input Gaji harus angka!");
+                JOptionPane.showMessageDialog(
+                        frame,
+                        "Terjadi kesalahan saat menyimpan data!",
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE
+                );
             }
         });
 
+        // ================= UPDATE =================
         btnUpd.addActionListener(e -> {
-            if (selectedIndex != -1) {
-                service.update(selectedIndex, new Pegawai(fields[0].getText(), fields[1].getText(), fields[2].getText(), Integer.parseInt(fields[3].getText())));
+
+            if (selectedIndex == -1) {
+                JOptionPane.showMessageDialog(
+                        frame,
+                        "Silakan pilih data pada daftar terlebih dahulu!",
+                        "Update Gagal",
+                        JOptionPane.WARNING_MESSAGE
+                );
+                return;
+            }
+
+            if (!validasiInput(frame, fields)) return;
+
+            try {
+                Pegawai p = new Pegawai(
+                        fields[0].getText(),
+                        fields[1].getText(),
+                        fields[2].getText(),
+                        Integer.parseInt(fields[3].getText())
+                );
+
+                service.update(selectedIndex, p);
                 refresh.run();
                 clearFields(fields);
-            } else {
-                JOptionPane.showMessageDialog(frame, "Pilih data di daftar terlebih dahulu!");
+
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(
+                        frame,
+                        "Gagal memperbarui data!",
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE
+                );
             }
         });
 
+        // ================= DELETE =================
         btnDel.addActionListener(e -> {
-            if (selectedIndex != -1) {
-                int confirm = JOptionPane.showConfirmDialog(frame, "Hapus data ini?", "Konfirmasi", JOptionPane.YES_NO_OPTION);
-                if (confirm == JOptionPane.YES_OPTION) {
-                    service.delete(selectedIndex);
-                    refresh.run();
-                    clearFields(fields);
-                }
-            } else {
-                JOptionPane.showMessageDialog(frame, "Pilih data yang ingin dihapus!");
+
+            if (selectedIndex == -1) {
+                JOptionPane.showMessageDialog(
+                        frame,
+                        "Pilih data yang ingin dihapus!",
+                        "Delete Gagal",
+                        JOptionPane.WARNING_MESSAGE
+                );
+                return;
+            }
+
+            int confirm = JOptionPane.showConfirmDialog(
+                    frame,
+                    "Apakah Anda yakin ingin menghapus data ini?",
+                    "Konfirmasi",
+                    JOptionPane.YES_NO_OPTION
+            );
+
+            if (confirm == JOptionPane.YES_OPTION) {
+                service.delete(selectedIndex);
+                refresh.run();
+                clearFields(fields);
             }
         });
 
@@ -127,6 +198,7 @@ public class SistemKepegawaianUI {
         topSection.add(headerBanner, BorderLayout.NORTH);
         topSection.add(formContainer, BorderLayout.CENTER);
         topSection.add(btnPanel, BorderLayout.SOUTH);
+
         frame.add(topSection, BorderLayout.NORTH);
         frame.add(scrollPane, BorderLayout.CENTER);
 
@@ -135,36 +207,81 @@ public class SistemKepegawaianUI {
         frame.setVisible(true);
     }
 
+    // ================= VALIDASI =================
+    private static boolean validasiInput(JFrame frame, JTextField[] f) {
+
+        for (JTextField t : f) {
+            if (t.getText().trim().isEmpty()) {
+                JOptionPane.showMessageDialog(
+                        frame,
+                        "Semua field wajib diisi!",
+                        "Validasi Error",
+                        JOptionPane.WARNING_MESSAGE
+                );
+                t.requestFocus();
+                return false;
+            }
+        }
+
+        if (!f[3].getText().matches("\\d+")) {
+            JOptionPane.showMessageDialog(
+                    frame,
+                    "Gaji harus berupa angka!",
+                    "Validasi Error",
+                    JOptionPane.WARNING_MESSAGE
+            );
+            f[3].requestFocus();
+            return false;
+        }
+
+        if (Integer.parseInt(f[3].getText()) <= 0) {
+            JOptionPane.showMessageDialog(
+                    frame,
+                    "Gaji harus lebih dari 0!",
+                    "Validasi Error",
+                    JOptionPane.WARNING_MESSAGE
+            );
+            f[3].requestFocus();
+            return false;
+        }
+
+        return true;
+    }
+
+    // ================= UI HELPER =================
     private static JPanel createDarkStrip(Pegawai p, int index, JTextField[] fields, JPanel parent) {
+
         JPanel strip = new JPanel(new GridLayout(1, 4, 25, 0));
         strip.setMaximumSize(new Dimension(Integer.MAX_VALUE, 75));
-        strip.setPreferredSize(new Dimension(0, 75));
         strip.setBackground(BG_CARD);
         strip.setBorder(BorderFactory.createCompoundBorder(
-                new LineBorder(BORDER_GLOW, 1), new EmptyBorder(12, 25, 12, 25)));
+                new LineBorder(BORDER_GLOW, 1),
+                new EmptyBorder(12, 25, 12, 25)
+        ));
 
         strip.add(createDataCell("ID", p.getId()));
-        strip.add(createDataCell("NAMA LENGKAP", p.getNama()));
+        strip.add(createDataCell("NAMA", p.getNama()));
         strip.add(createDataCell("JABATAN", p.getJabatan()));
-        strip.add(createDataCell("ESTIMASI GAJI", "IDR " + String.format("%,d", p.getGaji())));
+        strip.add(createDataCell("GAJI", "IDR " + String.format("%,d", p.getGaji())));
 
         strip.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                for (Component c : parent.getComponents()) {
-                    if (c instanceof JPanel) {
-                        ((JPanel) c).setBorder(BorderFactory.createCompoundBorder(
-                                new LineBorder(BORDER_GLOW, 1), new EmptyBorder(12, 25, 12, 25)));
-                    }
-                }
-
                 selectedIndex = index;
                 fields[0].setText(p.getId());
                 fields[1].setText(p.getNama());
                 fields[2].setText(p.getJabatan());
                 fields[3].setText(String.valueOf(p.getGaji()));
 
-                // Beri highlight pada yang dipilih
+                for (Component c : parent.getComponents()) {
+                    if (c instanceof JPanel) {
+                        ((JPanel) c).setBorder(BorderFactory.createCompoundBorder(
+                                new LineBorder(BORDER_GLOW, 1),
+                                new EmptyBorder(12, 25, 12, 25)
+                        ));
+                    }
+                }
+
                 strip.setBorder(new LineBorder(ACCENT_AMBER, 2));
             }
         });
@@ -177,19 +294,26 @@ public class SistemKepegawaianUI {
         f.setForeground(TEXT_MAIN);
         f.setCaretColor(ACCENT_AMBER);
         f.setFont(new Font("Segoe UI", Font.PLAIN, 15));
-        f.setBorder(BorderFactory.createCompoundBorder(new LineBorder(BORDER_GLOW, 1), new EmptyBorder(10, 15, 10, 15)));
+        f.setBorder(BorderFactory.createCompoundBorder(
+                new LineBorder(BORDER_GLOW, 1),
+                new EmptyBorder(10, 15, 10, 15)
+        ));
     }
 
     private static JPanel createDataCell(String label, String value) {
         JPanel p = new JPanel(new BorderLayout());
         p.setOpaque(false);
+
         JLabel l = new JLabel(label);
         l.setFont(new Font("Segoe UI", Font.BOLD, 10));
         l.setForeground(TEXT_DIM);
+
         JLabel v = new JLabel(value);
         v.setFont(new Font("Segoe UI", Font.PLAIN, 15));
         v.setForeground(TEXT_MAIN);
-        p.add(l, BorderLayout.NORTH); p.add(v, BorderLayout.CENTER);
+
+        p.add(l, BorderLayout.NORTH);
+        p.add(v, BorderLayout.CENTER);
         return p;
     }
 
