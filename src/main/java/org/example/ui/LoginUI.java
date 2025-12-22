@@ -19,7 +19,6 @@ public class LoginUI {
     private static final Color SUCCESS_GREEN  = new Color(16, 185, 129);
 
     public static void main(String[] args) {
-        // Konfigurasi Frame
         JFrame frame = new JFrame("Portal Access - HR System");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(1000, 650);
@@ -27,7 +26,6 @@ public class LoginUI {
         frame.setLocationRelativeTo(null);
         frame.setLayout(new GridLayout(1, 2));
 
-        // --- PANEL KIRI (Visual & Branding) ---
         JPanel leftPanel = new JPanel(new GridBagLayout());
         leftPanel.setBackground(ACCENT_BLUE);
 
@@ -98,11 +96,9 @@ public class LoginUI {
 
         rightPanel.add(formContainer);
 
-        // Gabungkan ke Frame
         frame.add(leftPanel);
         frame.add(rightPanel);
 
-        // Logic Login
         loginBtn.addActionListener(e -> {
             String user = userField.getText().trim();
             String pass = new String(passField.getPassword()).trim();
@@ -117,8 +113,6 @@ public class LoginUI {
 
         frame.setVisible(true);
     }
-
-    // --- HELPER STYLING ---
 
     private static void styleInputField(JTextField f) {
         f.setBackground(INPUT_BG);
