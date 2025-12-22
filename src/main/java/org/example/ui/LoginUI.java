@@ -30,7 +30,6 @@ public class LoginUI {
         frame.setLocationRelativeTo(null);
         frame.setLayout(new GridLayout(1, 2));
 
-        // ================= PANEL KIRI (WELCOME) =================
         JPanel leftPanel = new JPanel(new GridBagLayout());
         leftPanel.setBackground(ACCENT_BLUE);
 
