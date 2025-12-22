@@ -35,7 +35,6 @@ public class LoginUI {
                 "</div></html>");
         leftPanel.add(lblWelcome);
 
-        // --- PANEL KANAN (Form Login) ---
         JPanel rightPanel = new JPanel(new GridBagLayout());
         rightPanel.setBackground(BG_DARK);
 
@@ -44,7 +43,6 @@ public class LoginUI {
         formContainer.setLayout(new BoxLayout(formContainer, BoxLayout.Y_AXIS));
         formContainer.setPreferredSize(new Dimension(340, 500));
 
-        // Header Text
         JLabel lblLogin = new JLabel("Selamat Datang");
         lblLogin.setFont(new Font("Segoe UI", Font.BOLD, 28));
         lblLogin.setForeground(TEXT_MAIN);
@@ -53,7 +51,6 @@ public class LoginUI {
         lblDesc.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         lblDesc.setForeground(TEXT_DIM);
 
-        // Input Username
         JLabel lblUser = new JLabel("USERNAME");
         lblUser.setFont(new Font("Segoe UI", Font.BOLD, 11));
         lblUser.setForeground(ACCENT_BLUE);
@@ -61,7 +58,6 @@ public class LoginUI {
         JTextField userField = new JTextField();
         styleInputField(userField);
 
-        // Input Password
         JLabel lblPass = new JLabel("PASSWORD");
         lblPass.setFont(new Font("Segoe UI", Font.BOLD, 11));
         lblPass.setForeground(ACCENT_BLUE);
@@ -69,11 +65,9 @@ public class LoginUI {
         JPasswordField passField = new JPasswordField();
         styleInputField(passField);
 
-        // Button Login
         JButton loginBtn = new JButton("MASUK KE DASHBOARD");
         stylePrimaryButton(loginBtn);
 
-        // Menyusun Komponen ke Form (dengan Spacing yang rapi)
         formContainer.add(Box.createVerticalGlue());
         formContainer.add(lblLogin);
         formContainer.add(Box.createRigidArea(new Dimension(0, 5)));
@@ -136,7 +130,6 @@ public class LoginUI {
         b.setBorder(null);
         b.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-        // Efek Hover
         b.addMouseListener(new MouseAdapter() {
             public void mouseEntered(MouseEvent e) { b.setBackground(new Color(13, 160, 110)); }
             public void mouseExited(MouseEvent e) { b.setBackground(SUCCESS_GREEN); }
