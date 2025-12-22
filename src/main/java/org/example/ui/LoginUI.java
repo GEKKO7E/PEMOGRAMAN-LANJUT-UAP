@@ -3,8 +3,6 @@ package org.example.ui;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 
 public class LoginUI {
 
@@ -16,7 +14,6 @@ public class LoginUI {
     private static final Color SUCCESS_GREEN  = new Color(16, 185, 129);
 
     public static void main(String[] args) {
-        // Look and Feel Handling
         try {
             UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
         } catch (Exception e) {
@@ -30,16 +27,16 @@ public class LoginUI {
         frame.setLocationRelativeTo(null);
         frame.setLayout(new GridLayout(1, 2));
 
+        // PANEL KIRI
         JPanel leftPanel = new JPanel(new GridBagLayout());
         leftPanel.setBackground(ACCENT_BLUE);
-
         JLabel lblWelcome = new JLabel("<html><div style='text-align: left;'>" +
                 "<h1 style='font-size: 35px; color: white; margin-bottom: 0;'>WELCOME BACK !</h1>" +
                 "<p style='font-size: 14px; color: #D1D5DB;'>Enter your ID and Password to<br>continue access the portal system.</p>" +
                 "</div></html>");
         leftPanel.add(lblWelcome);
 
-        // ================= PANEL KANAN (FORM LOGIN) =================
+        // PANEL KANAN
         JPanel rightPanel = new JPanel(new GridBagLayout());
         rightPanel.setBackground(BG_DARK);
 
@@ -50,10 +47,9 @@ public class LoginUI {
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.gridx = 0;
-        gbc.weightx = 1;
+        gbc.gridx = 0; gbc.weightx = 1;
 
-        // Header
+        // SIGN IN Title
         JLabel lblSignIn = new JLabel("SIGN IN");
         lblSignIn.setFont(new Font("Segoe UI", Font.BOLD, 30));
         lblSignIn.setForeground(TEXT_WHITE);
@@ -66,7 +62,7 @@ public class LoginUI {
         gbc.gridy = 1; gbc.insets = new Insets(0, 0, 45, 0);
         formWrapper.add(lblSub, gbc);
 
-        // Input Username
+        // Input Fields
         JLabel lblUser = new JLabel("Username / ID Karyawan");
         lblUser.setFont(new Font("Segoe UI", Font.BOLD, 12));
         lblUser.setForeground(TEXT_DIM);
@@ -78,7 +74,6 @@ public class LoginUI {
         gbc.gridy = 3; gbc.insets = new Insets(0, 0, 25, 0);
         formWrapper.add(userField, gbc);
 
-        // Input Password
         JLabel lblPass = new JLabel("Password");
         lblPass.setFont(new Font("Segoe UI", Font.BOLD, 12));
         lblPass.setForeground(TEXT_DIM);
@@ -90,7 +85,7 @@ public class LoginUI {
         gbc.gridy = 5; gbc.insets = new Insets(0, 0, 40, 0);
         formWrapper.add(passField, gbc);
 
-        // Tombol Login
+        // Login Button
         JButton loginBtn = new JButton("LOGIN TO DASHBOARD");
         loginBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         loginBtn.setBackground(SUCCESS_GREEN);
@@ -99,48 +94,52 @@ public class LoginUI {
         loginBtn.setPreferredSize(new Dimension(0, 50));
         loginBtn.setFocusPainted(false);
         loginBtn.setBorder(null);
-        gbc.gridy = 6; gbc.insets = new Insets(0, 0, 0, 0);
+        gbc.gridy = 6;
         formWrapper.add(loginBtn, gbc);
 
         rightPanel.add(formWrapper);
         frame.add(leftPanel);
         frame.add(rightPanel);
 
-        // ================= EXCEPTION HANDLING & LOGIC =================
+        // ================= LOGIKA LOGIN KE DASHBOARD =================
         loginBtn.addActionListener(e -> {
             try {
                 String user = userField.getText().trim();
                 String pass = new String(passField.getPassword()).trim();
 
-                // 1. Handling Input Kosong
                 if (user.isEmpty() || pass.isEmpty()) {
-                    throw new IllegalArgumentException("Username atau Password tidak boleh kosong!");
+                    throw new IllegalArgumentException("Username atau Password tidak boleh kosong! ❌");
                 }
 
-                // 2. Simulasi Autentikasi
+                // Cek Kredensial
                 if (user.equals("Danish") && pass.equals("12345")) {
-                    frame.dispose();
-                    // Pastikan class SistemKepegawaianUI sudah ada
-                    SistemKepegawaianUI.main(null);
+                    frame.dispose(); // Tutup window Login
+
+                    // MEMANGGIL DASHBOARD UI
+                    new DashboardUI();
+
                 } else {
-                    // 3. Handling Kredensial Salah
-                    throw new SecurityException("Kredensial salah! Akses ditolak.");
+                    throw new SecurityException("Kredensial salah! Akses ditolak. ❌");
                 }
 
-            } catch (IllegalArgumentException ex) {
-                // Pesan untuk input kosong
-                JOptionPane.showMessageDialog(frame, ex.getMessage(), "Validasi Gagal", JOptionPane.WARNING_MESSAGE);
-            } catch (SecurityException ex) {
-                // Pesan untuk login gagal
-                JOptionPane.showMessageDialog(frame, ex.getMessage(), "Login Gagal", JOptionPane.ERROR_MESSAGE);
+            } catch (IllegalArgumentException | SecurityException ex) {
+                // Menampilkan pop-up error yang sudah kita buat sebelumnya
+                showErrorPopup(frame, ex.getMessage());
                 passField.setText("");
-            } catch (Exception ex) {
-                // Pesan untuk error sistem tak terduga
-                JOptionPane.showMessageDialog(frame, "Terjadi kesalahan sistem: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         });
 
         frame.setVisible(true);
+    }
+
+    // Popup Error Sederhana sesuai tema
+    private static void showErrorPopup(JFrame parent, String message) {
+        JPanel panel = new JPanel(new BorderLayout(15, 0));
+        panel.setBackground(new Color(55, 25, 25));
+        panel.setBorder(new EmptyBorder(15, 20, 15, 20));
+        JLabel msg = new JLabel("<html><div style='color:white; font-family:Segoe UI; font-weight:bold;'>" + message + "</div></html>");
+        panel.add(msg, BorderLayout.CENTER);
+        JOptionPane.showMessageDialog(parent, panel, "Akses Gagal", JOptionPane.PLAIN_MESSAGE);
     }
 
     private static void styleInputField(JTextField f) {
