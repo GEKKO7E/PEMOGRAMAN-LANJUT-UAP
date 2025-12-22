@@ -9,14 +9,16 @@ import javax.swing.border.LineBorder;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.text.NumberFormat;
+import java.util.Locale;
 
 public class SistemKepegawaianUI {
 
-    // PALET WARNA LOGIN (Disesuaikan)
-    private static final Color BG_DARKER      = new Color(24, 26, 31);   // Background utama (gelap)
-    private static final Color BG_SIDEBAR     = new Color(33, 37, 43);   // Sidebar (lebih terang dikit)
-    private static final Color ACCENT_BLUE    = new Color(37, 99, 235);  // Biru dari panel Welcome
-    private static final Color ACCENT_GREEN   = new Color(16, 185, 129); // Hijau dari tombol Login
+    // PALET WARNA LOGIN (Kontras Tinggi)
+    private static final Color BG_DARKER      = new Color(24, 26, 31);
+    private static final Color BG_SIDEBAR     = new Color(33, 37, 43);
+    private static final Color ACCENT_BLUE    = new Color(37, 99, 235);  // Biru Panel Login
+    private static final Color ACCENT_GREEN   = new Color(16, 185, 129); // Hijau Tombol Dashboard
     private static final Color TEXT_MAIN      = new Color(240, 240, 245);
     private static final Color TEXT_DIM       = new Color(150, 155, 170);
     private static final Color BORDER_COLOR   = new Color(50, 55, 65);
@@ -40,7 +42,7 @@ public class SistemKepegawaianUI {
 
         JLabel sideTitle = new JLabel("MANAJEMEN DATA");
         sideTitle.setFont(new Font("Segoe UI", Font.BOLD, 22));
-        sideTitle.setForeground(ACCENT_BLUE); // Menggunakan Biru Login
+        sideTitle.setForeground(ACCENT_BLUE);
         sidebar.add(sideTitle);
         sidebar.add(Box.createRigidArea(new Dimension(0, 35)));
 
@@ -63,7 +65,7 @@ public class SistemKepegawaianUI {
 
         sidebar.add(Box.createVerticalGlue());
 
-        // Action Buttons - Hijau disamakan dengan tombol Login
+        // ACTION BUTTONS
         JButton btnAdd = createActionBtn("SIMPAN DATA BARU", ACCENT_GREEN);
         JButton btnUpd = createActionBtn("PERBARUI DATA", ACCENT_BLUE);
         JButton btnDel = createActionBtn("HAPUS PERMANEN", new Color(220, 38, 38));
@@ -84,7 +86,7 @@ public class SistemKepegawaianUI {
         mainTitle.setFont(new Font("Segoe UI", Font.BOLD, 26));
         mainTitle.setForeground(TEXT_MAIN);
 
-        JLabel subTitle = new JLabel("Total SDM yang terdaftar dalam sistem");
+        JLabel subTitle = new JLabel("Kelola informasi gaji dan jabatan karyawan");
         subTitle.setForeground(TEXT_DIM);
         subTitle.setFont(new Font("Segoe UI", Font.PLAIN, 14));
 
@@ -101,18 +103,18 @@ public class SistemKepegawaianUI {
         listPanel.setOpaque(false);
 
         JScrollPane scrollPane = new JScrollPane(listPanel);
-        scrollPane.setBorder(new EmptyBorder(0, 50, 40, 50));
+        scrollPane.setBorder(null);
         scrollPane.setOpaque(false);
         scrollPane.getViewport().setOpaque(false);
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
-        scrollPane.setBorder(null);
+        scrollPane.setBorder(new EmptyBorder(0, 50, 40, 50));
         mainContent.add(scrollPane, BorderLayout.CENTER);
 
         // REFRESH LOGIC
         Runnable refresh = () -> {
             listPanel.removeAll();
             if (service.getAll().isEmpty()) {
-                JLabel emptyMsg = new JLabel("Belum ada data pegawai.");
+                JLabel emptyMsg = new JLabel("Tidak ada data. Silakan tambahkan pegawai baru.");
                 emptyMsg.setForeground(TEXT_DIM);
                 emptyMsg.setAlignmentX(Component.CENTER_ALIGNMENT);
                 listPanel.add(Box.createVerticalStrut(100));
@@ -128,18 +130,23 @@ public class SistemKepegawaianUI {
             listPanel.repaint();
         };
 
-        // EVENT LISTENERS
+        // EVENT HANDLERS WITH SALARY HANDLING
         btnAdd.addActionListener(e -> {
             if (!validasiInput(frame, fields)) return;
-            service.add(new Pegawai(fields[0].getText(), fields[1].getText(),
-                    fields[2].getText(), Integer.parseInt(fields[3].getText())));
-            refresh.run();
-            clear(fields);
+            try {
+                int gajiValue = Integer.parseInt(fields[3].getText());
+                service.add(new Pegawai(fields[0].getText(), fields[1].getText(),
+                        fields[2].getText(), gajiValue));
+                refresh.run();
+                clear(fields);
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(frame, "Format gaji tidak valid!", "Error", JOptionPane.ERROR_MESSAGE);
+            }
         });
 
         btnUpd.addActionListener(e -> {
             if (selectedIndex == -1) {
-                JOptionPane.showMessageDialog(frame, "Pilih data di daftar terlebih dahulu!");
+                JOptionPane.showMessageDialog(frame, "Pilih data yang ingin diubah!");
                 return;
             }
             if (!validasiInput(frame, fields)) return;
@@ -167,10 +174,40 @@ public class SistemKepegawaianUI {
         frame.setVisible(true);
     }
 
+    // ================= HELPER METHODS & UI STYLING =================
+
+    private static String formatRupiah(int nominal) {
+        NumberFormat nf = NumberFormat.getInstance(new Locale("id", "ID"));
+        return "Rp " + nf.format(nominal);
+    }
+
+    private static boolean validasiInput(JFrame frame, JTextField[] f) {
+        for (int i = 0; i < f.length; i++) {
+            if (f[i].getText().trim().isEmpty()) {
+                JOptionPane.showMessageDialog(frame, "Kolom tidak boleh kosong!", "Peringatan", JOptionPane.WARNING_MESSAGE);
+                f[i].requestFocus();
+                return false;
+            }
+        }
+        // Handling Gaji: Harus angka & positif
+        try {
+            int gaji = Integer.parseInt(f[3].getText());
+            if (gaji <= 0) {
+                JOptionPane.showMessageDialog(frame, "Gaji harus lebih besar dari 0!", "Input Gaji", JOptionPane.WARNING_MESSAGE);
+                return false;
+            }
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(frame, "Gaji harus berupa angka saja!", "Format Salah", JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+        return true;
+    }
+
     private static JPanel createModernRow(Pegawai p, int index, JTextField[] fields, JPanel parent) {
         JPanel row = new JPanel(new GridLayout(1, 4, 20, 0));
         row.setBackground(BG_SIDEBAR);
         row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 90));
+        row.setCursor(new Cursor(Cursor.HAND_CURSOR));
         row.setBorder(BorderFactory.createCompoundBorder(
                 new LineBorder(BORDER_COLOR, 1),
                 new EmptyBorder(20, 30, 20, 30)
@@ -179,7 +216,7 @@ public class SistemKepegawaianUI {
         row.add(createCell("ID PEGAWAI", p.getId()));
         row.add(createCell("NAMA LENGKAP", p.getNama()));
         row.add(createCell("JABATAN", p.getJabatan().toUpperCase()));
-        row.add(createCell("GAJI POKOK", "Rp " + String.format("%,d", p.getGaji())));
+        row.add(createCell("GAJI POKOK", formatRupiah(p.getGaji())));
 
         row.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
@@ -237,16 +274,6 @@ public class SistemKepegawaianUI {
         b.setCursor(new Cursor(Cursor.HAND_CURSOR));
         b.setBorder(null);
         return b;
-    }
-
-    private static boolean validasiInput(JFrame frame, JTextField[] f) {
-        for (JTextField t : f) {
-            if (t.getText().trim().isEmpty()) {
-                JOptionPane.showMessageDialog(frame, "Semua kolom wajib diisi!");
-                return false;
-            }
-        }
-        return true;
     }
 
     private static void clear(JTextField[] fs) {
