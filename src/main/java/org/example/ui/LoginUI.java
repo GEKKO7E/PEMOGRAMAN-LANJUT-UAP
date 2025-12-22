@@ -2,20 +2,27 @@ package org.example.ui;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import javax.swing.border.LineBorder;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 public class LoginUI {
 
-    // Palette Warna Berdasarkan Gambar Referensi
-    private static final Color BG_DARK        = new Color(33, 37, 43);   // Zinc 900
-    private static final Color ACCENT_BLUE    = new Color(37, 99, 235);  // Primary Blue
-    private static final Color ACCENT_GRADIENT= new Color(29, 78, 216);  // Deeper Blue
+    private static final Color BG_DARK        = new Color(28, 30, 35);
+    private static final Color INPUT_BG       = new Color(40, 44, 52);
+    private static final Color ACCENT_BLUE    = new Color(37, 99, 235);
     private static final Color TEXT_WHITE     = new Color(255, 255, 255);
-    private static final Color TEXT_DIM       = new Color(156, 163, 175); // Zinc 400
-    private static final Color SUCCESS_GREEN  = new Color(16, 185, 129); // Emerald 500
+    private static final Color TEXT_DIM       = new Color(156, 163, 175);
+    private static final Color SUCCESS_GREEN  = new Color(16, 185, 129);
 
     public static void main(String[] args) {
+        // Look and Feel Handling
+        try {
+            UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
+        } catch (Exception e) {
+            System.err.println("Gagal memuat tema: " + e.getMessage());
+        }
+
         JFrame frame = new JFrame("System Access - Login");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(1000, 650);
@@ -23,123 +30,128 @@ public class LoginUI {
         frame.setLocationRelativeTo(null);
         frame.setLayout(new GridLayout(1, 2));
 
-        // ================= SISI KIRI: WELCOME AREA =================
-        JPanel leftPanel = new JPanel() {
-            @Override
-            protected void paintComponent(Graphics g) {
-                Graphics2D g2d = (Graphics2D) g;
-                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                GradientPaint gp = new GradientPaint(0, 0, ACCENT_BLUE, getWidth(), getHeight(), ACCENT_GRADIENT);
-                g2d.setPaint(gp);
-                g2d.fillRect(0, 0, getWidth(), getHeight());
-            }
-        };
-        leftPanel.setLayout(new BoxLayout(leftPanel, BoxLayout.Y_AXIS));
-        leftPanel.setBorder(new EmptyBorder(80, 50, 50, 50));
+        // ================= PANEL KIRI (WELCOME) =================
+        JPanel leftPanel = new JPanel(new GridBagLayout());
+        leftPanel.setBackground(ACCENT_BLUE);
 
-        JLabel lblWelcome = new JLabel("WELCOME BACK !");
-        lblWelcome.setFont(new Font("Segoe UI", Font.BOLD, 32));
-        lblWelcome.setForeground(TEXT_WHITE);
-
-        JLabel lblDesc = new JLabel("<html>Enter your ID and<br>Password to continue</html>");
-        lblDesc.setFont(new Font("Segoe UI", Font.PLAIN, 18));
-        lblDesc.setForeground(new Color(219, 234, 254));
-
+        JLabel lblWelcome = new JLabel("<html><div style='text-align: left;'>" +
+                "<h1 style='font-size: 35px; color: white; margin-bottom: 0;'>WELCOME BACK !</h1>" +
+                "<p style='font-size: 14px; color: #D1D5DB;'>Enter your ID and Password to<br>continue access the portal system.</p>" +
+                "</div></html>");
         leftPanel.add(lblWelcome);
-        leftPanel.add(Box.createRigidArea(new Dimension(0, 20)));
-        leftPanel.add(lblDesc);
 
-        // ================= SISI KANAN: LOGIN FORM =================
+        // ================= PANEL KANAN (FORM LOGIN) =================
         JPanel rightPanel = new JPanel(new GridBagLayout());
         rightPanel.setBackground(BG_DARK);
 
-        JPanel formContent = new JPanel();
-        formContent.setOpaque(false);
-        formContent.setLayout(new BoxLayout(formContent, BoxLayout.Y_AXIS));
-        formContent.setPreferredSize(new Dimension(380, 500));
+        JPanel formWrapper = new JPanel();
+        formWrapper.setOpaque(false);
+        formWrapper.setLayout(new GridBagLayout());
+        formWrapper.setPreferredSize(new Dimension(350, 500));
 
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.gridx = 0;
+        gbc.weightx = 1;
+
+        // Header
         JLabel lblSignIn = new JLabel("SIGN IN");
-        lblSignIn.setFont(new Font("Segoe UI", Font.BOLD, 26));
+        lblSignIn.setFont(new Font("Segoe UI", Font.BOLD, 30));
         lblSignIn.setForeground(TEXT_WHITE);
-        lblSignIn.setAlignmentX(Component.LEFT_ALIGNMENT);
+        gbc.gridy = 0; gbc.insets = new Insets(0, 0, 5, 0);
+        formWrapper.add(lblSignIn, gbc);
 
         JLabel lblSub = new JLabel("TO ACCESS THE PORTAL");
-        lblSub.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblSub.setFont(new Font("Segoe UI Semibold", Font.PLAIN, 12));
         lblSub.setForeground(TEXT_DIM);
-        lblSub.setAlignmentX(Component.LEFT_ALIGNMENT);
+        gbc.gridy = 1; gbc.insets = new Insets(0, 0, 45, 0);
+        formWrapper.add(lblSub, gbc);
 
+        // Input Username
         JLabel lblUser = new JLabel("Username / ID Karyawan");
         lblUser.setFont(new Font("Segoe UI", Font.BOLD, 12));
         lblUser.setForeground(TEXT_DIM);
-        lblUser.setAlignmentX(Component.LEFT_ALIGNMENT);
+        gbc.gridy = 2; gbc.insets = new Insets(0, 0, 8, 0);
+        formWrapper.add(lblUser, gbc);
 
         JTextField userField = new JTextField();
-        styleModernInput(userField);
+        styleInputField(userField);
+        gbc.gridy = 3; gbc.insets = new Insets(0, 0, 25, 0);
+        formWrapper.add(userField, gbc);
 
+        // Input Password
         JLabel lblPass = new JLabel("Password");
         lblPass.setFont(new Font("Segoe UI", Font.BOLD, 12));
         lblPass.setForeground(TEXT_DIM);
-        lblPass.setAlignmentX(Component.LEFT_ALIGNMENT);
+        gbc.gridy = 4; gbc.insets = new Insets(0, 0, 8, 0);
+        formWrapper.add(lblPass, gbc);
 
         JPasswordField passField = new JPasswordField();
-        styleModernInput(passField);
+        styleInputField(passField);
+        gbc.gridy = 5; gbc.insets = new Insets(0, 0, 40, 0);
+        formWrapper.add(passField, gbc);
 
+        // Tombol Login
         JButton loginBtn = new JButton("LOGIN TO DASHBOARD");
         loginBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         loginBtn.setBackground(SUCCESS_GREEN);
         loginBtn.setForeground(TEXT_WHITE);
-        loginBtn.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        loginBtn.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        loginBtn.setPreferredSize(new Dimension(0, 50));
         loginBtn.setFocusPainted(false);
         loginBtn.setBorder(null);
-        loginBtn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
-        loginBtn.setAlignmentX(Component.LEFT_ALIGNMENT);
+        gbc.gridy = 6; gbc.insets = new Insets(0, 0, 0, 0);
+        formWrapper.add(loginBtn, gbc);
 
-        formContent.add(lblSignIn);
-        formContent.add(Box.createRigidArea(new Dimension(0, 5)));
-        formContent.add(lblSub);
-        formContent.add(Box.createRigidArea(new Dimension(0, 45)));
-
-        formContent.add(lblUser); // Label Username
-        formContent.add(Box.createRigidArea(new Dimension(0, 8)));
-        formContent.add(userField);
-        formContent.add(Box.createRigidArea(new Dimension(0, 20)));
-
-        formContent.add(lblPass);
-        formContent.add(Box.createRigidArea(new Dimension(0, 8)));
-        formContent.add(passField);
-
-        formContent.add(Box.createRigidArea(new Dimension(0, 35)));
-        formContent.add(loginBtn);
-
-        rightPanel.add(formContent);
-
+        rightPanel.add(formWrapper);
         frame.add(leftPanel);
         frame.add(rightPanel);
 
+        // ================= EXCEPTION HANDLING & LOGIC =================
         loginBtn.addActionListener(e -> {
-            String user = userField.getText();
-            String pass = new String(passField.getPassword());
+            try {
+                String user = userField.getText().trim();
+                String pass = new String(passField.getPassword()).trim();
 
-            if (user.equals("Danish") && pass.equals("12345")) {
-                frame.dispose();
-                SistemKepegawaianUI.main(null);
-            } else {
-                JOptionPane.showMessageDialog(frame, "Password atau Username Salah!!", "Error", JOptionPane.ERROR_MESSAGE);
+                // 1. Handling Input Kosong
+                if (user.isEmpty() || pass.isEmpty()) {
+                    throw new IllegalArgumentException("Username atau Password tidak boleh kosong!");
+                }
+
+                // 2. Simulasi Autentikasi
+                if (user.equals("Danish") && pass.equals("12345")) {
+                    frame.dispose();
+                    // Pastikan class SistemKepegawaianUI sudah ada
+                    SistemKepegawaianUI.main(null);
+                } else {
+                    // 3. Handling Kredensial Salah
+                    throw new SecurityException("Kredensial salah! Akses ditolak.");
+                }
+
+            } catch (IllegalArgumentException ex) {
+                // Pesan untuk input kosong
+                JOptionPane.showMessageDialog(frame, ex.getMessage(), "Validasi Gagal", JOptionPane.WARNING_MESSAGE);
+            } catch (SecurityException ex) {
+                // Pesan untuk login gagal
+                JOptionPane.showMessageDialog(frame, ex.getMessage(), "Login Gagal", JOptionPane.ERROR_MESSAGE);
+                passField.setText("");
+            } catch (Exception ex) {
+                // Pesan untuk error sistem tak terduga
+                JOptionPane.showMessageDialog(frame, "Terjadi kesalahan sistem: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         });
 
         frame.setVisible(true);
     }
 
-    private static void styleModernInput(JTextField f) {
-        f.setBackground(new Color(45, 49, 57)); // Sedikit lebih terang dari BG
+    private static void styleInputField(JTextField f) {
+        f.setBackground(INPUT_BG);
         f.setForeground(Color.WHITE);
-        f.setFont(new Font("Segoe UI", Font.PLAIN, 15));
         f.setCaretColor(ACCENT_BLUE);
-        f.setMaximumSize(new Dimension(Integer.MAX_VALUE, 48));
-        f.setAlignmentX(Component.LEFT_ALIGNMENT);
+        f.setFont(new Font("Segoe UI", Font.PLAIN, 15));
+        f.setPreferredSize(new Dimension(0, 48));
         f.setBorder(BorderFactory.createCompoundBorder(
-                new LineBorder(new Color(60, 64, 72), 1, true),
+                BorderFactory.createLineBorder(new Color(65, 70, 80), 1),
                 new EmptyBorder(0, 15, 0, 15)
         ));
     }
